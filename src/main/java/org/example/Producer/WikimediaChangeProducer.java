@@ -47,7 +47,9 @@ public class WikimediaChangeProducer {
                     if(!"enwiki".equals(json.get("wiki").asText())){
                         return;
                     }
-                    kafkaTemplate.send(TOPIC,messageEvent.getData().toString());
+                    //Same page Edits will go into same partitions
+                    String page = json.get("title").asText();
+                    kafkaTemplate.send(TOPIC,page,data);
                 } catch (JsonMappingException e) {
                     System.out.println(e.getMessage());
                 } catch (JsonProcessingException e) {
