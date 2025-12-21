@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.launchdarkly.eventsource.EventSource;
 import com.launchdarkly.eventsource.MessageEvent;
 import com.launchdarkly.eventsource.EventHandler;
+import jakarta.annotation.PreDestroy;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -24,6 +25,8 @@ import java.util.Map;
 public class WikimediaChangeProducer {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private static final String TOPIC = "wikimedia.raw";
+
+    private EventSource eventSource;
 
 
     public void start(){
@@ -69,11 +72,16 @@ public class WikimediaChangeProducer {
         };
 
         String url = "https://stream.wikimedia.org/v2/stream/recentchange";
-        EventSource eventSource =
+        eventSource =
                 new EventSource.Builder(eventHandler, URI.create(url))
                         .headers(Headers.of("User-Agent", "Parmod-Kafka-SpringBoot/1.0 (mrtechviewer@gmail.com)"))
                         .build();
 
         eventSource.start();
+    }
+
+    @PreDestroy
+    public void destroy(){
+        eventSource.close();
     }
 }
