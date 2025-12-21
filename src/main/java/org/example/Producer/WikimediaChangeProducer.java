@@ -2,6 +2,10 @@ package org.example.Producer;
 
 
 import ch.qos.logback.core.net.server.Client;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.launchdarkly.eventsource.EventSource;
 import com.launchdarkly.eventsource.MessageEvent;
 import com.launchdarkly.eventsource.EventHandler;
@@ -36,7 +40,19 @@ public class WikimediaChangeProducer {
 
             @Override
             public void onMessage(String event, MessageEvent messageEvent){
-                kafkaTemplate.send(TOPIC,messageEvent.getData().toString());
+                String data = messageEvent.getData();
+                try{
+                    JsonNode json = new ObjectMapper().readTree(data);
+
+                    if(!"enwiki".equals(json.get("wiki").asText())){
+                        return;
+                    }
+                    kafkaTemplate.send(TOPIC,messageEvent.getData().toString());
+                } catch (JsonMappingException e) {
+                    System.out.println(e.getMessage());
+                } catch (JsonProcessingException e) {
+                    System.out.println(e.getMessage());
+                }
             }
 
             @Override
