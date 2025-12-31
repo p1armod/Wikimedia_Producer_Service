@@ -47,7 +47,7 @@ public class WikimediaChangeProducer {
                 try{
                     JsonNode json = new ObjectMapper().readTree(data);
 
-                    if(!"enwiki".equals(json.get("wiki").asText())){
+                    if (!json.has("wiki") || !json.has("title")) {
                         return;
                     }
                     //Same page Edits will go into same partitions
